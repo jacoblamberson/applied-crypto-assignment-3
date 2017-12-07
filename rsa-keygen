@@ -1,0 +1,3 @@
+#!/bin/sh
+
+python rsa.py -f keygen $@
