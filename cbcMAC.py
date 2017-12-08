@@ -45,8 +45,8 @@ def encrypt(key, raw):
     '''
     if (raw is None) or (len(raw) == 0):
         raise ValueError('input text cannot be null or empty set')
+    print (len(raw))
     cipher = AES.AESCipher(key[:32], AES.MODE_ECB)
-    print(raw)
     ciphertext = cipher.encrypt(raw)
     return binascii.hexlify(bytearray(ciphertext)).decode('utf-8')
 
@@ -81,21 +81,21 @@ def xor_hex_string(a, b):
 # Returns hex-represented encrypted data
 def cbc_encrypt(key, hex):
     result = ""
+
     res = long_to_bytes(len(hex))
     hex_res = binascii.hexlify(res).decode('utf-8')
-    while len(hex_res) < 16:
+    while len(hex_res) < 32:
         hex_res = '0' + hex_res
     last_block=hex_res
     hex += 'ff'
     while len(hex) % 32 != 0:
         hex += '00'
-
     for i in range(0, len(hex), 32):
         before_enc = xor_hex_string(last_block, hex[i:i+32])
-        print(before_enc)
+        print(len(before_enc))
         last_block = encrypt(key, binascii.unhexlify(before_enc))
         result += last_block
-    return result
+    return binascii.unhexlify(result)
 
 
 
@@ -130,8 +130,8 @@ if __name__ == "__main__":
         outfile.close()
     if function == "decrypt":
         tagbit = open(tagfile, "rb")
-        tag = tagfile.read()
-        tagfile.close()
+        tag = tagbit.read()
+        tagbit.close()
         if(tag == answer):
             print("True")
         else:
