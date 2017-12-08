@@ -1,4 +1,5 @@
 import random, sys
+import hashlib
 
 
 NUM_TRIALS = 5
@@ -220,6 +221,22 @@ def decrypt_and_unpad(ciphertext, d, N):
     element = decrypt(ciphertext, d, N)
     plaintext = deconstruct_element(element, N)
     return plaintext
+
+
+def sign_hash(hash, d, n):
+    return encrypt(hash, d, n)
+
+def make_hash(data):
+    return hashlib.sha256(data).digest()
+
+def hash_and_sign(data, d, n):
+    h = make_hash(data)
+    return h, sign_hash(h)
+
+def validate_signature(signature, hash, e, n):
+    decrypted = decrypt(signature, e, n)
+    return decrypted == hash
+
 
 
 
