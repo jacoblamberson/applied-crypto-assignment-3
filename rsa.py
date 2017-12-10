@@ -344,7 +344,7 @@ elif function == 'keygen':
         CAfile = open(CA, "r")
         secretlist = CAfile.readlines()
         CAfile.close()
-        sign_N, sign_d = secretlist[1], secretlist[2]
+        sign_N, sign_d = int(secretlist[1]), int(secretlist[2])
 
     pfile = open(public, "rb")
     message_data = pfile.read()
