@@ -1,6 +1,6 @@
 import random, sys
 import hashlib
-
+from Crypto.Util import number
 
 NUM_TRIALS = 5
 
@@ -97,7 +97,7 @@ def get_bit_length(n):
     return len(bin(n))-2
 
 
-def find_primes_for_bit_length(bit_length):
+def find_primes_for_bit_length_old(bit_length):
     #print(bit_length)
     n_min, n_max = get_bit_length_range(bit_length)
     p_min, p_max = get_bit_length_range(bit_length//2 + 1)
@@ -110,11 +110,21 @@ def find_primes_for_bit_length(bit_length):
         if q_candidates:
             q = random.choice(q_candidates)
             break
-        if not primes:
-            primes = find_primes(p_min, p_max)
+        #if not primes:
+        #    primes = find_primes(p_min, p_max)
     else:
         return 0, 0
     return p, q
+
+
+def find_primes_for_bit_length(bit_length):
+    n_min, n_max = get_bit_length_range(bit_length)
+    prime_bit_length = bit_length // 2
+    while True:
+        p = number.getPrime(prime_bit_length)
+        q = number.getPrime(prime_bit_length)
+        if n_min <= p * q <= n_max:
+            return p, q
 
 
 def choose_e(order):
@@ -129,7 +139,8 @@ def choose_d(order, e):
     for i in range(1, order):
         tmp_check = ((order * i) + 1)
         if tmp_check % e == 0:
-            return int(tmp_check / e)
+            divided = tmp_check // e
+            return divided
     return 0
 
 
@@ -158,7 +169,7 @@ def get_random_bits(n):
 
 def get_r(n):
     sr = ""
-    while len(sr) < n/4:
+    while len(sr) < n//4:
         tmp = int(get_random_bits(8))
         if tmp != 0:
             tmps = format(tmp, 'x')
@@ -226,18 +237,31 @@ def decrypt_and_unpad(ciphertext, d, N):
 def sign_hash(hash, d, n):
     return encrypt(hash, d, n)
 
+
 def make_hash(data):
-    return hashlib.sha256(data).digest()
+    return int.from_bytes(hashlib.sha256(data).digest(), 'big')
+
 
 def hash_and_sign(data, d, n):
     h = make_hash(data)
-    return h, sign_hash(h)
+    sig = sign_hash(h, d, n)
+    #print(h)
+    #print(sig)
+    #print("Validating")
+    #validate_hash(sig, h, 3, n)
+    return h, sig
 
-def validate_signature(signature, hash, e, n):
+
+def validate_hash(signature, h, e, n):
     decrypted = decrypt(signature, e, n)
-    return decrypted == hash
+    #print(h)
+    #print(decrypted)
+    return decrypted == h
 
 
+def validate_signature(signature, data, e, n):
+    h = make_hash(data)
+    return validate_hash(signature, h, e, n)
 
 
 input = ""
@@ -247,6 +271,7 @@ public = ""
 secret = ""
 numBit = ""
 function = ""
+messagefile = ""
 
 for a in range(1, len(sys.argv)):
     if sys.argv[a] == "-k":
@@ -263,6 +288,8 @@ for a in range(1, len(sys.argv)):
         numBit = sys.argv[a + 1]
     if sys.argv[a] == "-f":
         function = sys.argv[a + 1]
+    if sys.argv[a] == "-m":
+        messagefile = sys.argv[a + 1]
 
 random.seed(1337)
 
@@ -309,12 +336,50 @@ elif function == 'keygen':
     pfile.write(str(N) + '\n')
     pfile.write(str(e) + '\n')
     pfile.close()
+    #print("Checking 123")
+    #encrypted = encrypt(123, e, N)
+    #decrypted = decrypt(encrypted, d, N)
+    #print("Encrypted: " + str(encrypted))
+    #print("Decrypted: " + str(decrypted))
+    #encrypted = encrypt(123, d, N)
+    #decrypted = decrypt(encrypted, e, N)
+    #print("Encrypted: " + str(encrypted))
+    #print("Decrypted: " + str(decrypted))
+elif function == 'rsa-sign':
+    keyring = open(keyfile, "r")
+    keylist = keyring.readlines()
+    keyring.close()
+    infile = open(messagefile, "rb")
+    message_data = infile.read()
+    infile.close()
+    n = int(keylist[0])
+    N = int(keylist[1])
+    d = int(keylist[2])
+    h, sig = hash_and_sign(message_data, d, N)
+    sig_file = open(secret, "w")
+    sig_file.write(str(sig))
+    sig_file.close()
+elif function == 'rsa-validate':
+    keyring = open(keyfile, "r")
+    keylist = keyring.readlines()
+    keyring.close()
+    infile = open(messagefile, "rb")
+    message_data = infile.read()
+    infile.close()
+    n = int(keylist[0])
+    N = int(keylist[1])
+    e = int(keylist[2])
+    sig_file = open(secret, "r")
+    sig = sig_file.readlines()
+    sig_file.close()
+    verdict = validate_signature(int(sig[0]), message_data, e, N)
+    print(verdict)
 else:
     print("BAD INPUT PANIC!!!")
 
 
 
-#exit()
+exit()
 
 #random.seed(1337)
 print(is_prime(2))
