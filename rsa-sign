@@ -1,0 +1,3 @@
+#!/bin/sh
+
+./py rsa.py -f rsa-sign $@

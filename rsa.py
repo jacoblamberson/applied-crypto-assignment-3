@@ -272,6 +272,7 @@ secret = ""
 numBit = ""
 function = ""
 messagefile = ""
+CA = None
 
 for a in range(1, len(sys.argv)):
     if sys.argv[a] == "-k":
@@ -290,6 +291,8 @@ for a in range(1, len(sys.argv)):
         function = sys.argv[a + 1]
     if sys.argv[a] == "-m":
         messagefile = sys.argv[a + 1]
+    if sys.argv[a] == "-c":
+        CA = sys.argv[a + 1]
 
 random.seed(1337)
 
@@ -336,6 +339,23 @@ elif function == 'keygen':
     pfile.write(str(N) + '\n')
     pfile.write(str(e) + '\n')
     pfile.close()
+    sign_d, sign_N = d, N
+    if CA is not None:
+        CAfile = open(CA, "r")
+        secretlist = CAfile.readlines()
+        CAfile.close()
+        sign_N, sign_d = secretlist[1], secretlist[2]
+
+    pfile = open(public, "rb")
+    message_data = pfile.read()
+    pfile.close()
+    h, sig = hash_and_sign(message_data, sign_d, sign_N)
+    #print(sig)
+    #print(message_data)
+    sig_file = open(public + "-casig", "w")
+    sig_file.write(str(sig))
+    sig_file.close()
+
     #print("Checking 123")
     #encrypted = encrypt(123, e, N)
     #decrypted = decrypt(encrypted, d, N)
