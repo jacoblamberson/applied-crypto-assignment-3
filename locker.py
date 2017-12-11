@@ -67,8 +67,8 @@ if __name__ == "__main__":
                 data = open(actualname, "rb")
                 plainstuff = data.read()
                 data.close()
-                encryptedstuff = main.cbc_encrypt(aeskeybytes,binascii.hexlify(plainstuff).decode('utf-8'))
-                finalplace = open(output, "w")
+                encryptedstuff = unhexlify(main.cbc_encrypt(aeskeybytes,binascii.hexlify(plainstuff).decode('utf-8')))
+                finalplace = open(output, "wb")
                 finalplace.write(encryptedstuff)
                 finalplace.close()
                 tagname = actualname + "-tag"
@@ -134,8 +134,8 @@ if __name__ == "__main__":
                 tmptagname = newname + '-tmptag'
                 os.remove(tagname)
                 os.remove(tmptagname)
-                encrypted_contents_file = open(actualname, 'r')
-                encrypted_contents = encrypted_contents_file.readlines()[0]
+                encrypted_contents_file = open(actualname, 'rb')
+                encrypted_contents = binascii.hexlify(encrypted_contents_file.read()).decode('utf-8')
                 encrypted_contents_file.close()
                 decrypted_contents = main.cbc_decrypt(aeskeybytes, encrypted_contents)
                 decrypted_file = open(newname, 'wb')
