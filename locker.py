@@ -54,5 +54,6 @@ if __name__ == "__main__":
                 finalplace.close()
                 tagname=filename +"T"
                 cbcMAC.encrypt(['-k','AESkey','-m','output','-t','tagname','-f','encrypt'])
+                os.remove(filename)
     elif function == "unlock":
         for filename in os.listdir(directory):
