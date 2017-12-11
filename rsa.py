@@ -263,176 +263,140 @@ def validate_signature(signature, data, e, n):
     h = make_hash(data)
     return validate_hash(signature, h, e, n)
 
+def main(args):
+    input = ""
+    output = ""
+    keyfile = ""
+    public = ""
+    secret = ""
+    numBit = ""
+    function = ""
+    messagefile = ""
+    CA = None
 
-input = ""
-output = ""
-keyfile = ""
-public = ""
-secret = ""
-numBit = ""
-function = ""
-messagefile = ""
-CA = None
+    for a in range(1, len(sys.argv)):
+        if sys.argv[a] == "-k":
+            keyfile = sys.argv[a + 1]
+        if sys.argv[a] == "-p":
+            public = sys.argv[a + 1]
+        if sys.argv[a] == "-o":
+            output = sys.argv[a + 1]
+        if sys.argv[a] == "-i":
+            input = sys.argv[a + 1]
+        if sys.argv[a] == "-s":
+            secret = sys.argv[a + 1]
+        if sys.argv[a] == "-n":
+            numBit = sys.argv[a + 1]
+        if sys.argv[a] == "-f":
+            function = sys.argv[a + 1]
+        if sys.argv[a] == "-m":
+            messagefile = sys.argv[a + 1]
+        if sys.argv[a] == "-c":
+            CA = sys.argv[a + 1]
 
-for a in range(1, len(sys.argv)):
-    if sys.argv[a] == "-k":
-        keyfile = sys.argv[a + 1]
-    if sys.argv[a] == "-p":
-        public = sys.argv[a + 1]
-    if sys.argv[a] == "-o":
-        output = sys.argv[a + 1]
-    if sys.argv[a] == "-i":
-        input = sys.argv[a + 1]
-    if sys.argv[a] == "-s":
-        secret = sys.argv[a + 1]
-    if sys.argv[a] == "-n":
-        numBit = sys.argv[a + 1]
-    if sys.argv[a] == "-f":
-        function = sys.argv[a + 1]
-    if sys.argv[a] == "-m":
-        messagefile = sys.argv[a + 1]
-    if sys.argv[a] == "-c":
-        CA = sys.argv[a + 1]
+    random.seed(1337)
 
-random.seed(1337)
+    if function == 'encrypt':
+        keyring = open(keyfile, "r")
+        keylist = keyring.readlines()
+        keyring.close()
+        infile = open(input, "r")
+        inlist = infile.readlines()
+        infile.close()
+        n = int(keylist[0])
+        N = int(keylist[1])
+        e = int(keylist[2])
+        plaintext = int(inlist[0])
+        ciphertext = pad_and_encrypt(plaintext, e, N)
+        outfile = open(output, "w")
+        outfile.write(str(ciphertext) + '\n')
+        outfile.close()
+    elif function == 'decrypt':
+        keyring = open(keyfile, "r")
+        keylist = keyring.readlines()
+        keyring.close()
+        infile = open(input, "r")
+        inlist = infile.readlines()
+        infile.close()
+        n = int(keylist[0])
+        N = int(keylist[1])
+        d = int(keylist[2])
+        ciphertext = int(inlist[0])
+        plaintext = decrypt_and_unpad(ciphertext, d, N)
+        outfile = open(output, "w")
+        outfile.write(str(plaintext) + '\n')
+        outfile.close()
+    elif function == 'keygen':
+        n = int(numBit)
+        e, d, N = generate_key_pair(n)
+        sfile = open(secret, "w")
+        sfile.write(str(n) + '\n')
+        sfile.write(str(N) + '\n')
+        sfile.write(str(d) + '\n')
+        sfile.close()
+        pfile = open(public, "w")
+        pfile.write(str(n) + '\n')
+        pfile.write(str(N) + '\n')
+        pfile.write(str(e) + '\n')
+        pfile.close()
+        sign_d, sign_N = d, N
+        if CA is not None:
+            CAfile = open(CA, "r")
+            secretlist = CAfile.readlines()
+            CAfile.close()
+            sign_N, sign_d = int(secretlist[1]), int(secretlist[2])
 
-if function == 'encrypt':
-    keyring = open(keyfile, "r")
-    keylist = keyring.readlines()
-    keyring.close()
-    infile = open(input, "r")
-    inlist = infile.readlines()
-    infile.close()
-    n = int(keylist[0])
-    N = int(keylist[1])
-    e = int(keylist[2])
-    plaintext = int(inlist[0])
-    ciphertext = pad_and_encrypt(plaintext, e, N)
-    outfile = open(output, "w")
-    outfile.write(str(ciphertext) + '\n')
-    outfile.close()
-elif function == 'decrypt':
-    keyring = open(keyfile, "r")
-    keylist = keyring.readlines()
-    keyring.close()
-    infile = open(input, "r")
-    inlist = infile.readlines()
-    infile.close()
-    n = int(keylist[0])
-    N = int(keylist[1])
-    d = int(keylist[2])
-    ciphertext = int(inlist[0])
-    plaintext = decrypt_and_unpad(ciphertext, d, N)
-    outfile = open(output, "w")
-    outfile.write(str(plaintext) + '\n')
-    outfile.close()
-elif function == 'keygen':
-    n = int(numBit)
-    e, d, N = generate_key_pair(n)
-    sfile = open(secret, "w")
-    sfile.write(str(n) + '\n')
-    sfile.write(str(N) + '\n')
-    sfile.write(str(d) + '\n')
-    sfile.close()
-    pfile = open(public, "w")
-    pfile.write(str(n) + '\n')
-    pfile.write(str(N) + '\n')
-    pfile.write(str(e) + '\n')
-    pfile.close()
-    sign_d, sign_N = d, N
-    if CA is not None:
-        CAfile = open(CA, "r")
-        secretlist = CAfile.readlines()
-        CAfile.close()
-        sign_N, sign_d = int(secretlist[1]), int(secretlist[2])
+        pfile = open(public, "rb")
+        message_data = pfile.read()
+        pfile.close()
+        h, sig = hash_and_sign(message_data, sign_d, sign_N)
+        #print(sig)
+        #print(message_data)
+        sig_file = open(public + "-casig", "w")
+        sig_file.write(str(sig))
+        sig_file.close()
 
-    pfile = open(public, "rb")
-    message_data = pfile.read()
-    pfile.close()
-    h, sig = hash_and_sign(message_data, sign_d, sign_N)
-    #print(sig)
-    #print(message_data)
-    sig_file = open(public + "-casig", "w")
-    sig_file.write(str(sig))
-    sig_file.close()
+        #print("Checking 123")
+        #encrypted = encrypt(123, e, N)
+        #decrypted = decrypt(encrypted, d, N)
+        #print("Encrypted: " + str(encrypted))
+        #print("Decrypted: " + str(decrypted))
+        #encrypted = encrypt(123, d, N)
+        #decrypted = decrypt(encrypted, e, N)
+        #print("Encrypted: " + str(encrypted))
+        #print("Decrypted: " + str(decrypted))
+    elif function == 'rsa-sign':
+        keyring = open(keyfile, "r")
+        keylist = keyring.readlines()
+        keyring.close()
+        infile = open(messagefile, "rb")
+        message_data = infile.read()
+        infile.close()
+        n = int(keylist[0])
+        N = int(keylist[1])
+        d = int(keylist[2])
+        h, sig = hash_and_sign(message_data, d, N)
+        sig_file = open(secret, "w")
+        sig_file.write(str(sig))
+        sig_file.close()
+    elif function == 'rsa-validate':
+        keyring = open(keyfile, "r")
+        keylist = keyring.readlines()
+        keyring.close()
+        infile = open(messagefile, "rb")
+        message_data = infile.read()
+        infile.close()
+        n = int(keylist[0])
+        N = int(keylist[1])
+        e = int(keylist[2])
+        sig_file = open(secret, "r")
+        sig = sig_file.readlines()
+        sig_file.close()
+        verdict = validate_signature(int(sig[0]), message_data, e, N)
+        print(verdict)
+    else:
+        print("BAD INPUT PANIC!!!")
+    exit()
 
-    #print("Checking 123")
-    #encrypted = encrypt(123, e, N)
-    #decrypted = decrypt(encrypted, d, N)
-    #print("Encrypted: " + str(encrypted))
-    #print("Decrypted: " + str(decrypted))
-    #encrypted = encrypt(123, d, N)
-    #decrypted = decrypt(encrypted, e, N)
-    #print("Encrypted: " + str(encrypted))
-    #print("Decrypted: " + str(decrypted))
-elif function == 'rsa-sign':
-    keyring = open(keyfile, "r")
-    keylist = keyring.readlines()
-    keyring.close()
-    infile = open(messagefile, "rb")
-    message_data = infile.read()
-    infile.close()
-    n = int(keylist[0])
-    N = int(keylist[1])
-    d = int(keylist[2])
-    h, sig = hash_and_sign(message_data, d, N)
-    sig_file = open(secret, "w")
-    sig_file.write(str(sig))
-    sig_file.close()
-elif function == 'rsa-validate':
-    keyring = open(keyfile, "r")
-    keylist = keyring.readlines()
-    keyring.close()
-    infile = open(messagefile, "rb")
-    message_data = infile.read()
-    infile.close()
-    n = int(keylist[0])
-    N = int(keylist[1])
-    e = int(keylist[2])
-    sig_file = open(secret, "r")
-    sig = sig_file.readlines()
-    sig_file.close()
-    verdict = validate_signature(int(sig[0]), message_data, e, N)
-    print(verdict)
-else:
-    print("BAD INPUT PANIC!!!")
-
-
-
-exit()
-
-#random.seed(1337)
-print(is_prime(2))
-print(is_prime(3))
-print(is_prime(4))
-print(is_prime(5))
-print(is_prime(6))
-print(is_prime(7))
-e, d, N = generate_key_pair(60)
-print((e, d, N))
-
-# Encrypt ASCII '00'
-print(encrypt(12336, e, N))
-print(decrypt(encrypt(12336, e, N), d, N))
-
-# Encrypt ASCII '0'
-print(encrypt(48, e, N))
-
-print(get_bit_length(7))
-tmp = get_r(256)
-print(tmp)
-print(format(tmp, 'x'))
-print(format(tmp << 8*2, 'x'))
-print(format(construct_element(int('beef', 16), int('1000000000000', 16)), 'x'))
-#print(get_bit_length(10000000000000000000000000))
-print(format(279936, 'x'))
-print(pow(12, 2, 623))
-print(my_modular_exp(12, 2, 623))
-
-#print(is_prime(1))
-print(is_prime(2))
-print(is_prime(3))
-print(is_prime(4))
-print(is_prime(5))
-print(is_prime(6))
-print(is_prime(7))
+if __name__ == "__main__":
+    main(sys.argv[1:])
