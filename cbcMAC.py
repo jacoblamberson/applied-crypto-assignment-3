@@ -97,13 +97,10 @@ def cbc_encrypt(key, hex):
         result += last_block
     return binascii.unhexlify(result)
 
-
-
-if __name__ == "__main__":
+def main(args):
     input = ""
     tagfile = ""
     keyfile=""
-    checkiv=0
 
     for a in range(1,len(sys.argv)):
         if sys.argv[a] == "-k":
@@ -137,3 +134,7 @@ if __name__ == "__main__":
         else:
             print("False")
 
+
+
+if __name__ == "__main__":
+    main(sys.argv[1:])
