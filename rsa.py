@@ -274,28 +274,29 @@ def main(args):
     messagefile = ""
     CA = None
 
-    for a in range(1, len(sys.argv)):
-        if sys.argv[a] == "-k":
-            keyfile = sys.argv[a + 1]
-        if sys.argv[a] == "-p":
-            public = sys.argv[a + 1]
-        if sys.argv[a] == "-o":
-            output = sys.argv[a + 1]
-        if sys.argv[a] == "-i":
-            input = sys.argv[a + 1]
-        if sys.argv[a] == "-s":
-            secret = sys.argv[a + 1]
-        if sys.argv[a] == "-n":
-            numBit = sys.argv[a + 1]
-        if sys.argv[a] == "-f":
-            function = sys.argv[a + 1]
-        if sys.argv[a] == "-m":
-            messagefile = sys.argv[a + 1]
-        if sys.argv[a] == "-c":
-            CA = sys.argv[a + 1]
+    for a in range(0, len(args)):
+        if args[a] == "-k":
+            keyfile = args[a + 1]
+        if args[a] == "-p":
+            public = args[a + 1]
+        if args[a] == "-o":
+            output = args[a + 1]
+        if args[a] == "-i":
+            input = args[a + 1]
+        if args[a] == "-s":
+            secret = args[a + 1]
+        if args[a] == "-n":
+            numBit = args[a + 1]
+        if args[a] == "-f":
+            function = args[a + 1]
+        if args[a] == "-m":
+            messagefile = args[a + 1]
+        if args[a] == "-c":
+            CA = args[a + 1]
 
     random.seed(1337)
 
+    print(function)
     if function == 'encrypt':
         keyring = open(keyfile, "r")
         keylist = keyring.readlines()
@@ -396,7 +397,7 @@ def main(args):
         print(verdict)
     else:
         print("BAD INPUT PANIC!!!")
-    exit()
+    #exit()
 
 if __name__ == "__main__":
     main(sys.argv[1:])

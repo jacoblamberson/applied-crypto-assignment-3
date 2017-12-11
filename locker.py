@@ -37,23 +37,50 @@ if __name__ == "__main__":
 
 
     if function == "lock":
-        ranKey = open("AESkey", "wb")
-        holder = binascii.hexlify(os.urandom(32))
+        # FIXME - Must return true to continue
+        rsa.main(['-f', 'rsa-validate', '-k', validatefile, '-m', publicfile, '-s', publicfile + '-casig'])
+
+        aeskeybytes = os.urandom(32)
+        aeskeynum = int.from_bytes(aeskeybytes, 'big')
+        holder = binascii.hexlify(aeskeybytes).decode('utf-8')
+
+        aeskeyfilersa = open("AES_key_for_rsa_encryption", "w")
+        aeskeyfilersa.write(str(aeskeynum))
+        aeskeyfilersa.close()
+        print("AES key for rsa encryption (int): " + str(aeskeynum))
         print(holder)
+        ranKey = open("AESkey", "w")
         ranKey.write(holder)
-        rsa.main(['-k','AESkey','-p','pub','-o','symmetric key manifest','-i','AESkey','-f','rsa-encrypt'])
-        rsa.main(['-k', 'AESkey', '-p', 'pub', '-o', 'manifest sign', '-i', 'symetric key manifest','-f','rsa-sign' ])
+        ranKey.close()
+        rsa.main(['-k', publicfile,'-o','symmetric_key_manifest','-i','AES_key_for_rsa_encryption','-f','encrypt'])
+        os.remove('AES_key_for_rsa_encryption')
+        rsa.main(['-k', privatefile, '-m', 'symmetric_key_manifest', '-s', 'symmetric_key_manifest-casig','-f','rsa-sign'])
         for filename in os.listdir(directory):
-                output=filename + "L"
-                data = open(filename, "r")
+                actualname = directory + "/" + filename
+                output = actualname + "-locked"
+                data = open(actualname, "rb")
                 plainstuff = data.read()
                 data.close()
-                encryptstuff=main.cbc_encrypt(holder,plainstuff)
-                finalplace = open(output, "wb")
-                finalplace.write(encryptstuff)
+                encryptedstuff = main.cbc_encrypt(aeskeybytes,binascii.hexlify(plainstuff).decode('utf-8'))
+                finalplace = open(output, "w")
+                finalplace.write(encryptedstuff)
                 finalplace.close()
-                tagname=filename +"T"
-                cbcMAC.encrypt(['-k','AESkey','-m','output','-t','tagname','-f','encrypt'])
-                os.remove(filename)
+                tagname = actualname + "-tag"
+                cbcMAC.main(['-k', 'AESkey', '-m', output, '-t', tagname, '-f', 'encrypt'])
+                os.remove(actualname)
+        os.remove('AESkey')
     elif function == "unlock":
+        # FIXME - Must return true to continue
+        rsa.main(['-f', 'rsa-validate', '-k', validatefile, '-m', publicfile, '-s', publicfile + '-casig'])
+
+        # FIXME - Must return true to continue
+        rsa.main(['-f', 'rsa-validate', '-k', publicfile, '-m', 'symmetric_key_manifest', '-s', 'symmetric_key_manifest-casig'])
+
+
         for filename in os.listdir(directory):
+            if '-locked' in filename:
+                actualname = directory + "/" + filename
+            elif '-tag' in filename:
+                actualname = directory + "/" + filename
+            else:
+                print("PANIC PANIC PANIC PANIC")
