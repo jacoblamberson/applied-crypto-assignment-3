@@ -45,7 +45,7 @@ def encrypt(key, raw):
     '''
     if (raw is None) or (len(raw) == 0):
         raise ValueError('input text cannot be null or empty set')
-    print (len(raw))
+    #print (len(raw))
     cipher = AES.AESCipher(key[:32], AES.MODE_ECB)
     ciphertext = cipher.encrypt(raw)
     return binascii.hexlify(bytearray(ciphertext)).decode('utf-8')
@@ -92,25 +92,26 @@ def cbc_encrypt(key, hex):
         hex += '00'
     for i in range(0, len(hex), 32):
         before_enc = xor_hex_string(last_block, hex[i:i+32])
-        print(len(before_enc))
+        #print(len(before_enc))
         last_block = encrypt(key, binascii.unhexlify(before_enc))
         result += last_block
     return binascii.unhexlify(result)
+
 
 def main(args):
     input = ""
     tagfile = ""
     keyfile=""
 
-    for a in range(1,len(sys.argv)):
-        if sys.argv[a] == "-k":
-            keyfile = sys.argv[a+1]
-        if sys.argv[a] == "-m":
-            input = sys.argv[a+1]
-        if sys.argv[a]=="-t":
-            tagfile=sys.argv[a+1]
-        if sys.argv[a]=="-f":
-            function=sys.argv[a+1]
+    for a in range(0,len(args)):
+        if args[a] == "-k":
+            keyfile = args[a+1]
+        if args[a] == "-m":
+            input = args[a+1]
+        if args[a]=="-t":
+            tagfile=args[a+1]
+        if args[a]=="-f":
+            function=args[a+1]
 
     infile=open(input,"rb")
     data= infile.read()
