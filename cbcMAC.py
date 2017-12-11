@@ -120,7 +120,7 @@ def main(args):
 
     keyring=open(keyfile,"r")
     key= binascii.unhexlify(keyring.read())
-    answer = cbc_encrypt(key, hex_data)
+    answer = cbc_encrypt(key, hex_data)[:32]
 
     if function == "encrypt":
         outfile = open(tagfile, "wb")

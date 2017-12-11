@@ -296,7 +296,7 @@ def main(args):
 
     random.seed(1337)
 
-    print(function)
+    #print(function)
     if function == 'encrypt':
         keyring = open(keyfile, "r")
         keylist = keyring.readlines()
@@ -395,6 +395,7 @@ def main(args):
         sig_file.close()
         verdict = validate_signature(int(sig[0]), message_data, e, N)
         print(verdict)
+        return verdict
     else:
         print("BAD INPUT PANIC!!!")
     #exit()
